@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap');
+
+body { font-family: 'Poppins', sans-serif; background: #edf6f9; color: #333; }
+h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+.navbar { background: rgba(0, 109, 119, 0.95) !important; backdrop-filter: blur(10px); }
+.navbar-brand { font-weight: 500; font-size: 1.8rem; }
+
+.hero {
+    height: 100vh;
+    background: linear-gradient(rgba(0,109,119,0.6), rgba(0,109,119,0.6)), url('../img/hero.jpg') center/cover no-repeat fixed;
+    display: flex;
+    align-items: center;
+    color: white;
+    text-align: center;
+    position: relative;
+}
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 3%;
+    height: 3px;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg"><path fill="%23edf6f9" d="M0,0 C360,100 1080,0 1440,50 L1440,100 L0,100 Z"/></svg>') bottom/cover no-repeat;
+}
+.hero-text { animation: fadeIn 2s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+
+.card {
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(10px);
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s;
+    box-shadow: 0 5px 30px rgba(0,0,0,0.1);
+}
+.card:hover { transform: translateY(-15px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+
+section { padding: 80px 0; }
+.bg-teal { background: #006d77; color: white; }
+.btn-primary { background: #ffddd2; border: none; color: #006d77; }
+.btn-primary:hover { background: #e29578; }
+
+footer { background: #006d77; }
