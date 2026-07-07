@@ -1,0 +1,2468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Administrative Access - Social Services NWP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --portal-dark: #0b0c10;
+            --portal-blue: #991b1b;
+            --portal-light-blue: #be123c;
+            --accent-gold: #e11d48;
+            --portal-bg: #e2e8f0;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --border-glass: rgba(255, 255, 255, 0.3);
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', 'Iskoola Pota', 'IskoolaPota', 'Noto Sans Sinhala', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #cbd5e1 0%, #f1f5f9 100%);
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .admin-hamburger {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--portal-blue);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 15px;
+            transition: color 0.2s;
+            outline: none;
+        }
+        .admin-hamburger:hover {
+            color: var(--portal-light-blue);
+        }
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 45;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--portal-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+            z-index: 50;
+            position: relative;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1rem;
+            margin-top: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+            list-style: none;
+        }
+
+        .menu-category {
+            padding: 10px 25px;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            color: #475569;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-top: 15px;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 25px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .sidebar-menu li a::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0;
+            background: var(--accent-gold);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+
+        .sidebar-menu li a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.03);
+            padding-left: 30px;
+        }
+
+        .sidebar-menu li a.active {
+            color: var(--portal-dark);
+            font-weight: 600;
+        }
+
+        .sidebar-menu li a.active::before {
+            width: 100%;
+        }
+
+        .sidebar-menu li a.active i {
+            color: var(--portal-dark);
+        }
+
+        .sidebar-menu li a i {
+            width: 25px;
+            font-size: 1rem;
+        }
+
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-nav {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            border-bottom: 1px solid var(--border-glass);
+            z-index: 10;
+        }
+
+        .top-nav .page-header-title {
+            font-size: 1.1rem;
+            color: var(--portal-blue);
+            font-weight: 600;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 6px 15px;
+            border-radius: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-glass);
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: var(--portal-dark);
+            font-weight: 300;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title span {
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--portal-blue), var(--portal-light-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .view-section {
+            display: none;
+            animation: slideUpFade 0.4s ease-out forwards;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .admin-tab-btn {
+            padding: 10px 18px;
+            background: var(--portal-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--portal-dark);
+            transition: 0.2s;
+        }
+
+        .admin-tab-btn.active {
+            background: var(--portal-blue);
+            color: white;
+        }
+
+        .premium-table-wrapper {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            margin-top: 20px;
+        }
+
+        .premium-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        .premium-table thead {
+            background: #f8fafc;
+        }
+
+        .premium-table th {
+            padding: 16px 20px;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .premium-table th[onclick] {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .premium-table th[onclick]:hover {
+            background-color: #f1f5f9;
+            color: var(--portal-light-blue);
+        }
+
+        .sort-icon {
+            margin-left: 6px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            transition: color 0.2s ease;
+        }
+
+        .premium-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-dark);
+            vertical-align: middle;
+        }
+
+        .premium-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .premium-table tbody tr.selected-row td {
+            background: #ffe4e6 !important;
+            border-bottom: 2px solid var(--accent-gold);
+            font-weight: 600;
+        }
+
+        .premium-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        .action-icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+        .action-icon-btn.edit { color: #2563eb; }
+        .action-icon-btn.delete { color: #ef4444; }
+        .action-icon-btn:hover { transform: scale(1.15); }
+
+        /* Form styling */
+        .admin-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            margin-bottom: 25px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .form-group.span-2 {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+            outline: none;
+            background: white;
+        }
+
+        .form-control:focus {
+            border-color: var(--portal-light-blue);
+        }
+
+        .btn-submit {
+            background: var(--portal-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: var(--portal-light-blue);
+            transform: translateY(-1px);
+        }
+
+        /* Suggestions card specific */
+        .sug-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-gray);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .sug-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(153, 27, 27, 0.05), 0 10px 10px -5px rgba(153, 27, 27, 0.02);
+            border-color: rgba(153, 27, 27, 0.15);
+        }
+        .sug-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .sug-subject-badge {
+            background: rgba(153, 27, 27, 0.06);
+            color: var(--portal-blue);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(153, 27, 27, 0.1);
+        }
+        .sug-date {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sug-user-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            background: #f8fafc;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            border: 1px solid #f1f5f9;
+        }
+        .info-item {
+            font-size: 0.88rem;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-item i {
+            color: var(--portal-blue);
+            font-size: 0.95rem;
+            width: 16px;
+            text-align: center;
+        }
+        .info-item strong {
+            color: var(--portal-dark);
+            font-weight: 600;
+        }
+        .info-item a {
+            color: var(--portal-light-blue);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .info-item a:hover {
+            color: var(--accent-gold);
+            text-decoration: underline;
+        }
+        .sug-body-content {
+            margin-bottom: 20px;
+        }
+        .body-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .body-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-dark);
+            white-space: pre-wrap;
+        }
+        .sug-footer {
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 12px;
+        }
+        .sug-delete-btn-premium {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .sug-delete-btn-premium:hover {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+        }
+
+        /* Sidebar Badges */
+        .sidebar-badge {
+            background: var(--accent-gold);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: auto;
+            min-width: 22px;
+            text-align: center;
+        }
+        .sidebar-badge.bg-gray {
+            background: #475569;
+        }
+
+        /* Dashboard Stat Cards */
+        .dashboard-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            border-color: var(--portal-blue);
+        }
+        .stat-card .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: #ffe4e6;
+            color: var(--portal-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: 0.3s;
+        }
+        .stat-card:hover .stat-icon {
+            background: var(--portal-blue);
+            color: white;
+        }
+        .stat-card.danger .stat-icon {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .stat-card.danger:hover .stat-icon {
+            background: #ef4444;
+            color: white;
+        }
+        .stat-card.danger:hover {
+            border-color: #ef4444;
+        }
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--portal-dark);
+        }
+
+        .dashboard-details-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        @media (max-width: 992px) {
+            .dashboard-details-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .quick-actions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .action-btn-pill {
+            background: var(--portal-bg);
+            color: var(--portal-dark);
+            border: 1px solid #cbd5e1;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        .action-btn-pill:hover {
+            background: var(--portal-blue);
+            color: white;
+            border-color: var(--portal-blue);
+            transform: translateX(5px);
+        }
+        .action-btn-pill i {
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .suggestions-preview-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .preview-sug-item {
+            padding: 12px 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid var(--portal-blue);
+            font-size: 0.85rem;
+        }
+        .preview-sug-item.new {
+            border-left-color: var(--accent-gold);
+        }
+        .preview-sug-head {
+            font-weight: 600;
+            color: var(--portal-dark);
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .preview-sug-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .preview-sug-body {
+            color: #334155;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        /* Accordion in Settings */
+        .sett-accordion {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .sett-accordion-item {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: white;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+            transition: border-color 0.2s;
+        }
+        .sett-accordion-item:hover {
+            border-color: var(--portal-blue);
+        }
+        .sett-accordion-header {
+            padding: 16px 20px;
+            font-weight: 600;
+            background: #f8fafc;
+            color: var(--portal-dark);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .sett-accordion-header:hover {
+            background: #f1f5f9;
+        }
+        .sett-accordion-header.active {
+            background: var(--portal-blue);
+            color: white;
+        }
+        .sett-accordion-header.active i {
+            color: white;
+        }
+        .sett-accordion-header span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .accordion-arrow {
+            transition: transform 0.3s ease;
+        }
+        .sett-accordion-header.active .accordion-arrow {
+            transform: rotate(180deg);
+        }
+        .sett-accordion-body {
+            padding: 0;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+        .sett-accordion-body.active {
+            padding: 20px;
+            max-height: 5000px;
+            opacity: 1;
+            border-top: 1px solid #cbd5e1;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 99999;
+        }
+        .toast-msg {
+            background: white;
+            color: var(--portal-dark);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-left: 4px solid var(--portal-blue);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            animation: toastIn 0.3s ease-out forwards;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .toast-msg.success { border-left-color: #10b981; }
+        .toast-msg.error { border-left-color: #ef4444; }
+        .toast-msg.warning { border-left-color: #f59e0b; }
+        @keyframes toastIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(120%); opacity: 0; }
+        }
+        @keyframes modalZoom {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Custom Confirmation Modal */
+        .confirm-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .confirm-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .confirm-modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+        }
+        .confirm-modal-overlay.active .confirm-modal-box {
+            transform: scale(1);
+        }
+        .confirm-modal-icon {
+            font-size: 3rem;
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+        }
+        .confirm-modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--portal-dark);
+            margin-bottom: 10px;
+        }
+        .confirm-modal-message {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .confirm-modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .confirm-btn {
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            border: none;
+        }
+        .confirm-btn-yes {
+            background: var(--portal-blue);
+            color: white;
+        }
+        .confirm-btn-yes:hover {
+            background: var(--portal-light-blue);
+        }
+        .confirm-btn-no:hover {
+            background: #cbd5e1;
+        }
+
+        /* ================= RESPONSIVE ADMIN PORTAL ================= */
+        @media (max-width: 992px) {
+            .top-nav {
+                padding: 0 20px;
+            }
+            .content-area {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-hamburger {
+                display: block;
+            }
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                z-index: 50;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                height: 100vh;
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            .main-workspace {
+                width: 100vw;
+            }
+            #headerPortalTitle {
+                font-size: 0.85rem;
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .user-info-text {
+                display: none;
+            }
+            .logout-text {
+                display: none;
+            }
+            .logout-btn {
+                width: 34px;
+                height: 34px;
+                border-radius: 50% !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 !important;
+                font-size: 0.9rem;
+            }
+            .logout-btn i {
+                margin: 0;
+            }
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .form-group.span-2 {
+                grid-column: span 1;
+            }
+            .admin-tab-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            .page-title {
+                font-size: 1.4rem;
+                margin-bottom: 18px;
+            }
+            .admin-card {
+                padding: 15px;
+            }
+        }
+        @media (max-width: 576px) {
+            .top-nav {
+                height: 60px;
+                padding: 0 15px;
+            }
+            #headerPortalTitle {
+                font-size: 0.78rem;
+            }
+            .content-area {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="adminSidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-shield-halved" style="font-size: 2.5rem; color:var(--accent-gold);"></i>
+            <h2>Secure Portal</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-category">CMS Control Center</li>
+            <li><a class="nav-link active" data-target="dashboard-view"><i class="fas fa-chart-line"></i> Dashboard Home</a></li>
+            <li><a class="nav-link" data-target="admin-panel"><i class="fas fa-edit"></i> Web Site Editor</a></li>
+            <li><a class="nav-link" data-target="sug-inbox"><i class="fas fa-inbox"></i> Suggestions Inbox <span class="sidebar-badge" id="badge-suggestions">0</span></a></li>
+            
+            <li class="menu-category">Static Previews</li>
+            <li><a class="nav-link" data-target="about-officers"><i class="fas fa-user-tie"></i> Staff Directory <span class="sidebar-badge bg-gray" id="badge-staff">0</span></a></li>
+            <li><a class="nav-link" data-target="circulars-list-view"><i class="fas fa-file-alt"></i> Public Downloads <span class="sidebar-badge bg-gray" id="badge-downloads">0</span></a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-workspace">
+        <header class="top-nav">
+            <button class="admin-hamburger" id="adminHamburger"><i class="fas fa-bars"></i></button>
+            <div class="page-header-title">
+                <i class="fas fa-shield-alt" style="color:var(--accent-gold);"></i> <span id="headerPortalTitle">Wayamba Provincial Social Services Portal Access</span>
+            </div>
+            <div class="user-profile">
+                <div style="text-align:right;" class="user-info-text">
+                    <strong id="loggedUserName" style="display:block; font-size:0.9rem; color:var(--portal-dark);">Admin</strong>
+                    <span id="loggedUserRole" style="font-size:0.75rem; color:var(--text-muted);">System Admin</span>
+                </div>
+                <a href="#" class="logout-btn" onclick="handleLogout(event);"><i class="fas fa-power-off"></i> <span class="logout-text">Logout</span></a>
+            </div>
+        </header>
+
+        <div class="content-area">
+
+            <!-- 0. CMS Dashboard Home -->
+            <div class="view-section active" id="dashboard-view">
+                <h2 class="page-title"><i class="fas fa-chart-line" style="color:var(--accent-gold);"></i> <span>CMS Dashboard Home</span></h2>
+                
+                <!-- Stat Cards Grid -->
+                <div class="dashboard-stats-grid">
+                    <div class="stat-card" onclick="document.querySelector('[data-target=\'admin-panel\']').click(); switchAdminTab('news', document.querySelector('[onclick*=\'news\']'));">
+                        <div class="stat-icon"><i class="fas fa-newspaper"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">News Articles</span>
+                            <strong class="stat-value" id="stat-news-count">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="document.querySelector('[data-target=\'admin-panel\']').click(); switchAdminTab('officers', document.querySelector('[onclick*=\'officers\']'));">
+                        <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Staff Members</span>
+                            <strong class="stat-value" id="stat-staff-count">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card danger" onclick="document.querySelector('[data-target=\'sug-inbox\']').click();">
+                        <div class="stat-icon"><i class="fas fa-inbox"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Suggestions Inbox</span>
+                            <strong class="stat-value" id="stat-sug-count">0</strong>
+                        </div>
+                    </div>
+                    <div class="stat-card" onclick="document.querySelector('[data-target=\'admin-panel\']').click(); switchAdminTab('downloads', document.querySelector('[onclick*=\'downloads\']'));">
+                        <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Downloads Catalog</span>
+                            <strong class="stat-value" id="stat-dl-count">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-details-row">
+                    <!-- Recent Suggestions -->
+                    <div class="dashboard-panel-col">
+                        <div class="admin-card" style="height:100%;">
+                            <h3 style="margin-bottom:15px; color:var(--portal-blue); display:flex; justify-content:space-between; align-items:center;">
+                                <span><i class="fas fa-envelope-open-text"></i> Recent Suggestions</span>
+                                <a href="#" onclick="document.querySelector('[data-target=\'sug-inbox\']').click(); return false;" style="font-size:0.8rem; font-weight:600; color:var(--accent-gold); text-decoration:none;">View All</a>
+                            </h3>
+                            <div id="dashSuggestionsPreview" class="suggestions-preview-list">
+                                <p style="color:var(--text-muted); font-style:italic;">Loading recent suggestions...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="dashboard-panel-col">
+                        <div class="admin-card" style="height:100%;">
+                            <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-rocket"></i> Quick CMS Actions</h3>
+                            <div class="quick-actions-list">
+                                <button class="action-btn-pill" onclick="document.querySelector('[data-target=\'admin-panel\']').click(); switchAdminTab('news', document.querySelector('[onclick*=\'news\']')); setTimeout(() => highlightAndScrollToForm('newsForm'), 100);"><i class="fas fa-plus"></i> Add Welfare News Article</button>
+                                <button class="action-btn-pill" onclick="document.querySelector('[data-target=\'admin-panel\']').click(); switchAdminTab('announcements', document.querySelector('[onclick*=\'announcements\']')); setTimeout(() => highlightAndScrollToForm('annForm'), 100);"><i class="fas fa-plus"></i> Add Announcement Notice</button>
+                                <button class="action-btn-pill" onclick="document.querySelector('[data-target=\'admin-panel\']').click(); switchAdminTab('banners', document.querySelector('[onclick*=\'banners\']'));"><i class="fas fa-images"></i> Manage Home Banner Images</button>
+                                <button class="action-btn-pill" onclick="document.querySelector('[data-target=\'admin-panel\']').click(); switchAdminTab('settings', document.querySelector('[onclick*=\'settings\']')); setTimeout(() => { document.querySelector('.sett-accordion-header[data-sec=\'sett-sec-contact\']').click(); highlightAndScrollToForm('settingsForm'); }, 100);"><i class="fas fa-address-book"></i> Update Office Contacts & Fax</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1. General CMS Panel -->
+            <div class="view-section" id="admin-panel">
+                <h2 class="page-title"><i class="fas fa-users-cog" style="color:var(--accent-gold);"></i> <span>Database & Management Settings</span></h2>
+                
+                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap: wrap;">
+                    <button class="admin-tab-btn active" onclick="switchAdminTab('news', this)">Latest News</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('announcements', this)">Announcements</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('downloads', this)">Downloads</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('procurements', this)">Procurements</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('officers', this)">Officers</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('projects', this)">Welfare Projects</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('courses', this)">Workshops & Programs</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('links', this)">Important Links</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('gallery', this)">Gallery Photos</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('banners', this)">Home Banners</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('settings', this)">Site Text Settings</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('bookings', this)">Hall Bookings</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('bus_bookings', this)">Vehicle Bookings</button>
+                    <button class="admin-tab-btn" onclick="switchAdminTab('services', this)">Services (සේවාවන්)</button>
+                </div>
+
+                <!-- Tab content: Services -->
+                <div id="admin-tab-services" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);" id="servicesFormTitle"><i class="fas fa-plus"></i> Add New Service</h3>
+                        <form id="servicesForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="serviceId" value="">
+                            
+                            <!-- Icon and Icon BG -->
+                            <div class="form-group-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                                <div class="form-group">
+                                    <label>FontAwesome Icon Class</label>
+                                    <input type="text" id="serviceIconClass" required class="form-control" placeholder="e.g. fas fa-hand-holding-usd">
+                                </div>
+                                <div class="form-group">
+                                    <label>Icon Background (CSS gradient/color)</label>
+                                    <input type="text" id="serviceIconBg" required class="form-control" placeholder="e.g. linear-gradient(135deg, #1e3a5f, #2563eb)">
+                                </div>
+                            </div>
+
+                            <!-- Titles (Multilingual) -->
+                            <div style="border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin-bottom:10px; font-size:0.95rem; color:var(--portal-blue);">Service Titles</h4>
+                                <div style="display:grid; gap:10px;">
+                                    <div class="form-group">
+                                        <label>Title (English)</label>
+                                        <input type="text" id="serviceTitleEn" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Title (Sinhala)</label>
+                                        <input type="text" id="serviceTitleSi" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Title (Tamil)</label>
+                                        <input type="text" id="serviceTitleTa" required class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Short Descriptions (Multilingual) -->
+                            <div style="border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin-bottom:10px; font-size:0.95rem; color:var(--portal-blue);">Short Descriptions (Card Details)</h4>
+                                <div style="display:grid; gap:10px;">
+                                    <div class="form-group">
+                                        <label>Short Description (English)</label>
+                                        <input type="text" id="serviceShortDescEn" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Short Description (Sinhala)</label>
+                                        <input type="text" id="serviceShortDescSi" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Short Description (Tamil)</label>
+                                        <input type="text" id="serviceShortDescTa" required class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bullets (Multilingual, Newline-separated) -->
+                            <div style="border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin-bottom:5px; font-size:0.95rem; color:var(--portal-blue);">Bullet Points (Optional - One per line)</h4>
+                                <p style="color:var(--text-muted); font-size:0.75rem; margin-bottom:10px; font-style:italic;"><i class="fas fa-info-circle"></i> Leaving these bullet lists empty will make this service card non-clickable on the home page.</p>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+                                    <div class="form-group">
+                                        <label>Bullets (English)</label>
+                                        <textarea id="serviceBulletsEn" rows="4" class="form-control" placeholder="Item 1&#10;Item 2"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bullets (Sinhala)</label>
+                                        <textarea id="serviceBulletsSi" rows="4" class="form-control" placeholder="කරුණ 1&#10;කරුණ 2"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bullets (Tamil)</label>
+                                        <textarea id="serviceBulletsTa" rows="4" class="form-control" placeholder="விருப்பம் 1&#10;விருப்பம் 2"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Long Descriptions (Multilingual, Optional paragraphs) -->
+                            <div style="border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin-bottom:10px; font-size:0.95rem; color:var(--portal-blue);">Long Descriptions (Optional paragraphs below bullets)</h4>
+                                <div style="display:grid; gap:10px;">
+                                    <div class="form-group">
+                                        <label>Long Description (English)</label>
+                                        <textarea id="serviceLongDescEn" rows="2" class="form-control"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Long Description (Sinhala)</label>
+                                        <textarea id="serviceLongDescSi" rows="2" class="form-control"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Long Description (Tamil)</label>
+                                        <textarea id="serviceLongDescTa" rows="2" class="form-control"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Sort Order</label>
+                                <input type="number" id="serviceSortOrder" value="0" required class="form-control" style="width: 150px;">
+                            </div>
+
+                            <div style="display:flex; gap:10px;">
+                                <button type="submit" class="btn-submit" style="flex:1;"><i class="fas fa-save"></i> Save Service</button>
+                                <button type="button" class="admin-tab-btn" id="cancelServiceEditBtn" style="display:none;" onclick="resetServicesForm()"><i class="fas fa-times"></i> Cancel Edit</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search services..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'servicesTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Order</th>
+                                    <th style="width: 60px; text-align: center;">Icon</th>
+                                    <th>Title (English)</th>
+                                    <th>Title (Sinhala)</th>
+                                    <th style="width: 180px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="servicesTableBody">
+                                <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Loading services data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: News -->
+                <div id="admin-tab-news" class="admin-tab-content" style="display:block;">
+
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add Welfare News Article</h3>
+                        <form id="newsForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="newsId" value="">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="newsCategory" class="form-control">
+                                    <option value="dept-news">Department News</option>
+                                    <option value="prov-news">Provincial Welfare</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input type="text" id="newsTitle" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Publish Date</label>
+                                <input type="date" id="newsDate" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>News Link (URL)</label>
+                                <input type="text" id="newsUrl" class="form-control" placeholder="Paste external URL (e.g. http://example.com/article) or custom page link">
+                            </div>
+                            <div class="form-group">
+                                <label>Content</label>
+                                <textarea id="newsContent" required rows="4" class="form-control"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>News Main Image URL</label>
+                                <input type="text" id="newsImageUrl" class="form-control" placeholder="Select image or paste URL" oninput="showLivePreview(this, 'newsImagePreview')">
+                                <div class="image-preview-box" style="margin-top:8px;">
+                                    <img id="newsImagePreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                </div>
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    <input type="file" id="newsImageSelect" class="form-control" style="padding:4px;">
+                                    <button type="button" id="newsImageUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('newsImageSelect', 'newsImageUrl', 'newsImageUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                </div>
+                            </div>
+                            <div class="form-group-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label>Before Image URL (For Sliders)</label>
+                                    <input type="text" id="newsImageBeforeUrl" class="form-control" placeholder="Select image or paste URL" oninput="showLivePreview(this, 'newsImageBeforePreview')">
+                                    <div class="image-preview-box" style="margin-top:8px;">
+                                        <img id="newsImageBeforePreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                    </div>
+                                    <div style="display:flex; gap:10px; margin-top:8px;">
+                                        <input type="file" id="newsImageBeforeSelect" class="form-control" style="padding:4px;">
+                                        <button type="button" id="newsImageBeforeUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('newsImageBeforeSelect', 'newsImageBeforeUrl', 'newsImageBeforeUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>After Image URL (For Sliders)</label>
+                                    <input type="text" id="newsImageAfterUrl" class="form-control" placeholder="Select image or paste URL" oninput="showLivePreview(this, 'newsImageAfterPreview')">
+                                    <div class="image-preview-box" style="margin-top:8px;">
+                                        <img id="newsImageAfterPreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                    </div>
+                                    <div style="display:flex; gap:10px; margin-top:8px;">
+                                        <input type="file" id="newsImageAfterSelect" class="form-control" style="padding:4px;">
+                                        <button type="button" id="newsImageAfterUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('newsImageAfterSelect', 'newsImageAfterUrl', 'newsImageAfterUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save News</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search news..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'newsTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Category</th>
+                                    <th>Title</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="newsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Announcements -->
+                <div id="admin-tab-announcements" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add Announcement</h3>
+                        <form id="annForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="annId" value="">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="annCategory" class="form-control">
+                                    <option value="internal">Internal</option>
+                                    <option value="outside">Public</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Notice / Announcement Text</label>
+                                <input type="text" id="annTitle" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Url Link (Optional)</label>
+                                <input type="text" id="annUrl" class="form-control" value="#">
+                            </div>
+                            <div class="form-group">
+                                <label>Badge (e.g. 'New', or empty)</label>
+                                <input type="text" id="annBadge" class="form-control">
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Announcement</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search announcements..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'annTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Notice Details</th>
+                                    <th>Badge</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="annTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Downloads -->
+                <div id="admin-tab-downloads" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add Download Document</h3>
+                        <form id="dlForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="dlId" value="">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="dlCategory" class="form-control">
+                                    <option value="forms">Application Forms</option>
+                                    <option value="circulars">Department Circulars</option>
+                                    <option value="rates">Welfare Guidelines</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Document Titles (Multilingual) -->
+                            <div style="border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin-bottom:10px; font-size:0.95rem; color:var(--portal-blue);">Document Titles</h4>
+                                <div style="display:grid; gap:10px;">
+                                    <div class="form-group">
+                                        <label>Title (English)</label>
+                                        <input type="text" id="dlTitle" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Title (Sinhala)</label>
+                                        <input type="text" id="dlTitleSi" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Title (Tamil)</label>
+                                        <input type="text" id="dlTitleTa" required class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Descriptions (Multilingual) -->
+                            <div style="border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin-bottom:10px; font-size:0.95rem; color:var(--portal-blue);">Descriptions</h4>
+                                <div style="display:grid; gap:10px;">
+                                    <div class="form-group">
+                                        <label>Description (English)</label>
+                                        <input type="text" id="dlDesc" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description (Sinhala)</label>
+                                        <input type="text" id="dlDescSi" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description (Tamil)</label>
+                                        <input type="text" id="dlDescTa" required class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Document File Paths / Links (Multilingual) -->
+                            <div style="border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px;">
+                                <h4 style="margin-bottom:10px; font-size:0.95rem; color:var(--portal-blue);">Document Files / URLs</h4>
+                                <div style="display:grid; gap:15px;">
+                                    <div class="form-group">
+                                        <label>File URL (English / Default)</label>
+                                        <input type="text" id="dlFileUrl" class="form-control" placeholder="Select a file or paste URL">
+                                        <div style="display:flex; gap:10px; margin-top:8px;">
+                                            <input type="file" id="dlFileSelect" class="form-control" style="padding:4px;">
+                                            <button type="button" id="dlUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('dlFileSelect', 'dlFileUrl', 'dlUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>File URL (Sinhala)</label>
+                                        <input type="text" id="dlFileUrlSi" class="form-control" placeholder="Select a file or paste URL">
+                                        <div style="display:flex; gap:10px; margin-top:8px;">
+                                            <input type="file" id="dlFileSelectSi" class="form-control" style="padding:4px;">
+                                            <button type="button" id="dlUploadBtnSi" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('dlFileSelectSi', 'dlFileUrlSi', 'dlUploadBtnSi')"><i class="fas fa-upload"></i> Upload</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>File URL (Tamil)</label>
+                                        <input type="text" id="dlFileUrlTa" class="form-control" placeholder="Select a file or paste URL">
+                                        <div style="display:flex; gap:10px; margin-top:8px;">
+                                            <input type="file" id="dlFileSelectTa" class="form-control" style="padding:4px;">
+                                            <button type="button" id="dlUploadBtnTa" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('dlFileSelectTa', 'dlFileUrlTa', 'dlUploadBtnTa')"><i class="fas fa-upload"></i> Upload</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Document</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search downloads..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'dlTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Document Title</th>
+                                    <th>Description</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dlTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Procurements -->
+                <div id="admin-tab-procurements" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add Procurement Notice</h3>
+                        <form id="procForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="procId" value="">
+                            <div class="form-group">
+                                <label>Tender / Procurement Title</label>
+                                <input type="text" id="procTitle" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Publish Date</label>
+                                <input type="date" id="procDate" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="procStatus" class="form-control">
+                                    <option value="active">Active</option>
+                                    <option value="expired">Expired</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Document / Notice File URL</label>
+                                <input type="text" id="procFileUrl" class="form-control" placeholder="Select document PDF or paste URL">
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    <input type="file" id="procFileSelect" class="form-control" style="padding:4px;">
+                                    <button type="button" id="procUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('procFileSelect', 'procFileUrl', 'procUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Procurement</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search procurements..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'procTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Publish Date</th>
+                                    <th>Title</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="procTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Officers -->
+                <div id="admin-tab-officers" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 id="offFormTitle" style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add New Officer Details</h3>
+                        <form id="offForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="offId" value="">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="offName" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Designation / Title</label>
+                                <input type="text" id="offTitle" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="text" id="offPhone" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="offEmail" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="offCategory" class="form-control">
+                                    <option value="hq">Head Office (HQ)</option>
+                                    <option value="executive">Executive Board</option>
+                                    <option value="admin">Administration Staff</option>
+                                    <option value="technical">Welfare / Social Officers</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Photo URL / Path</label>
+                                <input type="text" id="offPhotoUrl" class="form-control" placeholder="Select photo or paste URL" oninput="showLivePreview(this, 'offPhotoPreview')">
+                                <div class="image-preview-box" style="margin-top:8px;">
+                                    <img id="offPhotoPreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                </div>
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    <input type="file" id="offPhotoSelect" class="form-control" style="padding:4px;">
+                                    <button type="button" id="offUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('offPhotoSelect', 'offPhotoUrl', 'offUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Display Priority / Sort Order (Lower values sort to the top, e.g. 1 for Director)</label>
+                                <input type="number" id="offSortOrder" class="form-control" value="0" min="0">
+                            </div>
+                            <div style="display:flex; gap:10px; margin-top:10px;">
+                                <button type="submit" class="btn-submit" id="offSubmitBtn"><i class="fas fa-save"></i> Save Officer</button>
+                                <button type="button" class="admin-tab-btn" id="offCancelBtn" style="display:none; padding:10px 20px; border-radius:30px;" onclick="cancelOffEdit()"><i class="fas fa-times"></i> Cancel / Add New</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search staff..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'offTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px; text-align: center;">Photo</th>
+                                    <th onclick="sortOfficers('name')" style="min-width: 160px;">Name <span id="sort-icon-name" class="sort-icon"><i class="fas fa-sort"></i></span></th>
+                                    <th onclick="sortOfficers('title')" style="min-width: 150px;">Designation <span id="sort-icon-title" class="sort-icon"><i class="fas fa-sort"></i></span></th>
+                                    <th onclick="sortOfficers('phone')" style="min-width: 120px;">Phone <span id="sort-icon-phone" class="sort-icon"><i class="fas fa-sort"></i></span></th>
+                                    <th onclick="sortOfficers('category')" style="min-width: 120px;">Category <span id="sort-icon-category" class="sort-icon"><i class="fas fa-sort"></i></span></th>
+                                    <th style="width: 100px; text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="offTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Welfare Projects (NEW) -->
+                <div id="admin-tab-projects" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add / Edit Welfare Project</h3>
+                        <form id="projForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="projId" value="">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="projCategory" class="form-control">
+                                    <option value="summary">Welfare Summary</option>
+                                    <option value="key">Key Social Programs</option>
+                                    <option value="completed">Completed Projects</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Title (English)</label>
+                                <input type="text" id="projTitleEn" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Title (Sinhala)</label>
+                                <input type="text" id="projTitleSi" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Title (Tamil)</label>
+                                <input type="text" id="projTitleTa" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Description (English)</label>
+                                <textarea id="projDescEn" required rows="3" class="form-control"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Description (Sinhala)</label>
+                                <textarea id="projDescSi" required rows="3" class="form-control"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Description (Tamil)</label>
+                                <textarea id="projDescTa" required rows="3" class="form-control"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL</label>
+                                <input type="text" id="projImageUrl" class="form-control" placeholder="Select photo or paste URL" oninput="showLivePreview(this, 'projImagePreview')">
+                                <div class="image-preview-box" style="margin-top:8px;">
+                                    <img id="projImagePreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                </div>
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    <input type="file" id="projPhotoSelect" class="form-control" style="padding:4px;">
+                                    <button type="button" id="projUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('projPhotoSelect', 'projImageUrl', 'projUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Financial Details / Status badge (e.g. 'Est. LKR 80 Million' or 'Completed')</label>
+                                <input type="text" id="projFinancial" class="form-control">
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Project</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search projects..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'projTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Title (EN)</th>
+                                    <th>Financials / Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Workshops & Programs (NEW) -->
+                <div id="admin-tab-courses" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add / Edit Workshop / Program</h3>
+                        <form id="courseForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="courseId" value="">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="courseCategory" class="form-control">
+                                    <option value="upcoming">Upcoming Session</option>
+                                    <option value="completed">Completed Program</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Program / Session Title</label>
+                                <input type="text" id="courseTitle" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Event Date</label>
+                                <input type="date" id="courseDate" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" id="courseLocation" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Icon Class (FontAwesome, e.g. 'fa-graduation-cap', 'fa-universal-access')</label>
+                                <input type="text" id="courseIconClass" class="form-control" value="fa-calendar-alt">
+                            </div>
+                            <div class="form-group">
+                                <label>URL Link (Optional)</label>
+                                <input type="text" id="courseUrl" class="form-control" value="#">
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Program</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search workshops..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'courseTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="courseTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Important Links (NEW) -->
+                <div id="admin-tab-links" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add / Edit Important Link</h3>
+                        <form id="linkForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="linkId" value="">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="linkCategory" class="form-control">
+                                    <option value="govt-links">Government Links</option>
+                                    <option value="tech-links">Welfare Resources Links</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Link Title</label>
+                                <input type="text" id="linkTitle" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Destination URL</label>
+                                <input type="url" id="linkUrl" required class="form-control" placeholder="http://...">
+                            </div>
+                            <div class="form-group">
+                                <label>Icon/Logo Image URL (Optional)</label>
+                                <input type="text" id="linkImageUrl" class="form-control" placeholder="Select photo or paste URL" oninput="showLivePreview(this, 'linkImagePreview')">
+                                <div class="image-preview-box" style="margin-top:8px;">
+                                    <img id="linkImagePreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                </div>
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    <input type="file" id="linkPhotoSelect" class="form-control" style="padding:4px;">
+                                    <button type="button" id="linkUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('linkPhotoSelect', 'linkImageUrl', 'linkUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Link</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search links..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'linkTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Title</th>
+                                    <th>Destination URL</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="linkTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Gallery Photos (NEW) -->
+                <div id="admin-tab-gallery" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add / Edit Gallery Photo</h3>
+                        <form id="galForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="galId" value="">
+                            <div class="form-group">
+                                <label>Photo Title</label>
+                                <input type="text" id="galTitle" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL</label>
+                                <input type="text" id="galImageUrl" required class="form-control" placeholder="Select photo or paste URL" oninput="showLivePreview(this, 'galImagePreview')">
+                                <div class="image-preview-box" style="margin-top:8px;">
+                                    <img id="galImagePreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                </div>
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    <input type="file" id="galPhotoSelect" class="form-control" style="padding:4px;">
+                                    <button type="button" id="galUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('galPhotoSelect', 'galImageUrl', 'galUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Description / Caption</label>
+                                <textarea id="galDesc" rows="3" class="form-control"></textarea>
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Photo</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search gallery..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'galTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Image Preview</th>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="galTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Banners (NEW) -->
+                <div id="admin-tab-banners" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 id="bannerFormTitle" style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-plus"></i> Add Home Banner Slide</h3>
+                        <form id="bannerForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="bannerId" value="">
+                            <div class="form-group">
+                                <label>Caption Title (Optional)</label>
+                                <input type="text" id="bannerTitle" class="form-control" placeholder="Caption overlay text on slider">
+                            </div>
+                            <div class="form-group">
+                                <label>Banner Image URL</label>
+                                <input type="text" id="bannerImageUrl" class="form-control" placeholder="Select photo or paste URL (optional if uploading)" oninput="showLivePreview(this, 'bannerImagePreview')">
+                                <div class="image-preview-box" style="margin-top:8px;">
+                                    <img id="bannerImagePreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                </div>
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    <input type="file" id="bannerPhotoSelect" class="form-control" style="padding:4px;" multiple>
+                                    <button type="button" id="bannerUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleBannerUpload()"><i class="fas fa-upload"></i> Upload</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Sort Order / Display Priority</label>
+                                <input type="number" id="bannerSortOrder" class="form-control" value="0" min="0">
+                            </div>
+                            <div style="display:flex; gap:10px; margin-top:10px;">
+                                <button type="submit" class="btn-submit" id="bannerSubmitBtn"><i class="fas fa-save"></i> Save Banner</button>
+                                <button type="button" class="admin-tab-btn" id="bannerCancelBtn" style="display:none; padding:10px 20px; border-radius:30px;" onclick="cancelBannerEdit()"><i class="fas fa-times"></i> Cancel / Add New</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search banners..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'bannerTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:150px; text-align:center;">Preview</th>
+                                    <th>Title / Caption</th>
+                                    <th style="width:120px;">Sort Order</th>
+                                    <th style="width:120px; text-align:center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bannerTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Settings (Accordion style) -->
+                <div id="admin-tab-settings" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-edit"></i> Edit Global Site Settings</h3>
+                        <form id="settingsForm" style="display:grid; gap:20px;">
+                            
+                            <div class="sett-accordion">
+                                
+                                <!-- 1. Vision & Mission -->
+                                <div class="sett-accordion-item">
+                                    <div class="sett-accordion-header active" data-sec="sett-sec-vision" onclick="toggleSettingsAccordion(this)">
+                                        <span><i class="fas fa-eye"></i> Vision & Mission</span>
+                                        <i class="fas fa-chevron-down accordion-arrow"></i>
+                                    </div>
+                                    <div class="sett-accordion-body active" id="sett-sec-vision">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Department Vision (English)</label>
+                                            <input type="text" id="setVisionEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Department Vision (Sinhala)</label>
+                                            <input type="text" id="setVisionSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Department Vision (Tamil)</label>
+                                            <input type="text" id="setVisionTa" class="form-control">
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Department Mission (English)</label>
+                                            <textarea id="setMissionEn" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Department Mission (Sinhala)</label>
+                                            <textarea id="setMissionSi" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Department Mission (Tamil)</label>
+                                            <textarea id="setMissionTa" rows="3" class="form-control"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 2. About Us Overview & Org Chart -->
+                                <div class="sett-accordion-item">
+                                    <div class="sett-accordion-header" data-sec="sett-sec-about" onclick="toggleSettingsAccordion(this)">
+                                        <span><i class="fas fa-info-circle"></i> About Us & Organization Chart</span>
+                                        <i class="fas fa-chevron-down accordion-arrow"></i>
+                                    </div>
+                                    <div class="sett-accordion-body" id="sett-sec-about">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>About Us Overview (English)</label>
+                                            <textarea id="setOverviewEn" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>About Us Overview (Sinhala)</label>
+                                            <textarea id="setOverviewSi" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>About Us Overview (Tamil)</label>
+                                            <textarea id="setOverviewTa" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Objectives (English)</label>
+                                            <textarea id="setObjectivesEn" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Objectives (Sinhala)</label>
+                                            <textarea id="setObjectivesSi" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Objectives (Tamil)</label>
+                                            <textarea id="setObjectivesTa" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Achievements (English)</label>
+                                            <textarea id="setAchievementsEn" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Achievements (Sinhala)</label>
+                                            <textarea id="setAchievementsSi" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Achievements (Tamil)</label>
+                                            <textarea id="setAchievementsTa" rows="3" class="form-control"></textarea>
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group">
+                                            <label>Organization Chart Image Path / URL</label>
+                                            <input type="text" id="setOrgChartUrl" class="form-control" oninput="showLivePreview(this, 'orgChartPreview')">
+                                            <div class="image-preview-box" style="margin-top:8px;">
+                                                <img id="orgChartPreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                            </div>
+                                            <div style="display:flex; gap:10px; margin-top:8px;">
+                                                <input type="file" id="orgChartPhotoSelect" class="form-control" style="padding:4px;">
+                                                <button type="button" id="orgChartUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('orgChartPhotoSelect', 'setOrgChartUrl', 'orgChartUploadBtn')"><i class="fas fa-upload"></i> Upload Image</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Services Catalogs Bullet Lists -->
+                                <div class="sett-accordion-item">
+                                    <div class="sett-accordion-header" data-sec="sett-sec-services" onclick="toggleSettingsAccordion(this)">
+                                        <span><i class="fas fa-hand-holding-heart"></i> Services Catalogs (Bullet Lists)</span>
+                                        <i class="fas fa-chevron-down accordion-arrow"></i>
+                                    </div>
+                                    <div class="sett-accordion-body" id="sett-sec-services">
+                                        <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:15px; font-style:italic;"><i class="fas fa-info-circle"></i> Type each bullet point item on a new line (one item per line).</p>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Elderly Care Bullet List (English)</label>
+                                            <textarea id="setServiceInvListEn" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Elderly Care Bullet List (Sinhala)</label>
+                                            <textarea id="setServiceInvListSi" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Elderly Care Bullet List (Tamil)</label>
+                                            <textarea id="setServiceInvListTa" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Vocational Training Bullet List (English)</label>
+                                            <textarea id="setServiceEngListEn" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Vocational Training Bullet List (Sinhala)</label>
+                                            <textarea id="setServiceEngListSi" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Vocational Training Bullet List (Tamil)</label>
+                                            <textarea id="setServiceEngListTa" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Vocational Description Text (English)</label>
+                                            <input type="text" id="setServiceEngDescEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Vocational Description Text (Sinhala)</label>
+                                            <input type="text" id="setServiceEngDescSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Vocational Description Text (Tamil)</label>
+                                            <input type="text" id="setServiceEngDescTa" class="form-control">
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Disability Support Bullet List (English)</label>
+                                            <textarea id="setServiceConstListEn" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Disability Support Bullet List (Sinhala)</label>
+                                            <textarea id="setServiceConstListSi" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Disability Support Bullet List (Tamil)</label>
+                                            <textarea id="setServiceConstListTa" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Disability Description Text (English)</label>
+                                            <input type="text" id="setServiceConstDescEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Disability Description Text (Sinhala)</label>
+                                            <input type="text" id="setServiceConstDescSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Disability Description Text (Tamil)</label>
+                                            <input type="text" id="setServiceConstDescTa" class="form-control">
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Rehabilitation Bullet List (English)</label>
+                                            <textarea id="setServiceOpListEn" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Rehabilitation Bullet List (Sinhala)</label>
+                                            <textarea id="setServiceOpListSi" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Rehabilitation Bullet List (Tamil)</label>
+                                            <textarea id="setServiceOpListTa" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Staff Development Bullet List (English)</label>
+                                            <textarea id="setServiceInstListEn" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Staff Development Bullet List (Sinhala)</label>
+                                            <textarea id="setServiceInstListSi" rows="4" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Staff Development Bullet List (Tamil)</label>
+                                            <textarea id="setServiceInstListTa" rows="4" class="form-control"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Contacts, Fax & Socials & Citizen's Charter -->
+                                <div class="sett-accordion-item">
+                                    <div class="sett-accordion-header" data-sec="sett-sec-contact" onclick="toggleSettingsAccordion(this)">
+                                        <span><i class="fas fa-phone"></i> Contacts, Socials & Citizen's Charter</span>
+                                        <i class="fas fa-chevron-down accordion-arrow"></i>
+                                    </div>
+                                    <div class="sett-accordion-body" id="sett-sec-contact">
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                                            <div class="form-group">
+                                                <label>Phone Number</label>
+                                                <input type="text" id="setContactPhoneEn" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Fax Number</label>
+                                                <input type="text" id="setContactFaxEn" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Email Address</label>
+                                            <input type="email" id="setContactEmailEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Office Address (English)</label>
+                                            <input type="text" id="setContactAddressEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Office Address (Sinhala)</label>
+                                            <input type="text" id="setContactAddressSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Office Address (Tamil)</label>
+                                            <input type="text" id="setContactAddressTa" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Google Maps Embed URL</label>
+                                            <input type="text" id="setContactMapEn" class="form-control">
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                                            <div class="form-group">
+                                                <label>Facebook Page Link</label>
+                                                <input type="url" id="setSocialFacebookEn" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>YouTube Channel Link</label>
+                                                <input type="url" id="setSocialYoutubeEn" class="form-control">
+                                            </div>
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Citizen's Charter PDF URL (Sinhala)</label>
+                                            <input type="text" id="setCharterSiUrl" class="form-control">
+                                            <div style="display:flex; gap:10px; margin-top:8px;">
+                                                <input type="file" id="charterSiFileSelect" class="form-control" style="padding:4px;">
+                                                <button type="button" id="charterSiUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('charterSiFileSelect', 'setCharterSiUrl', 'charterSiUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Citizen's Charter PDF URL (English)</label>
+                                            <input type="text" id="setCharterEnUrl" class="form-control">
+                                            <div style="display:flex; gap:10px; margin-top:8px;">
+                                                <input type="file" id="charterEnFileSelect" class="form-control" style="padding:4px;">
+                                                <button type="button" id="charterEnUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('charterEnFileSelect', 'setCharterEnUrl', 'charterEnUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. RTI Officers Info & Marquee Ribbon -->
+                                <div class="sett-accordion-item">
+                                    <div class="sett-accordion-header" data-sec="sett-sec-rti" onclick="toggleSettingsAccordion(this)">
+                                        <span><i class="fas fa-shield-alt"></i> RTI Personnel & News Ribbon</span>
+                                        <i class="fas fa-chevron-down accordion-arrow"></i>
+                                    </div>
+                                    <div class="sett-accordion-body" id="sett-sec-rti">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Marquee Ribbon Text (English)</label>
+                                            <input type="text" id="setNewsEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Marquee Ribbon Text (Sinhala)</label>
+                                            <input type="text" id="setNewsSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Marquee Ribbon Text (Tamil)</label>
+                                            <input type="text" id="setNewsTa" class="form-control">
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Information Officer Name (English)</label>
+                                            <input type="text" id="setRtiIOEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Information Officer Designation (English)</label>
+                                            <input type="text" id="setRtiIOTitleEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Information Officer Name (Sinhala)</label>
+                                            <input type="text" id="setRtiIOSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Information Officer Designation (Sinhala)</label>
+                                            <input type="text" id="setRtiIOTitleSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Information Officer Name (Tamil)</label>
+                                            <input type="text" id="setRtiIOTa" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Information Officer Designation (Tamil)</label>
+                                            <input type="text" id="setRtiIOTitleTa" class="form-control">
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Designated Appellate Officer Name (English)</label>
+                                            <input type="text" id="setRtiAOEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Designated Appellate Officer Designation (English)</label>
+                                            <input type="text" id="setRtiAOTitleEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Designated Appellate Officer Name (Sinhala)</label>
+                                            <input type="text" id="setRtiAOSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Designated Appellate Officer Designation (Sinhala)</label>
+                                            <input type="text" id="setRtiAOTitleSi" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI: Designated Appellate Officer Name (Tamil)</label>
+                                            <input type="text" id="setRtiAOTa" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>RTI: Designated Appellate Officer Designation (Tamil)</label>
+                                            <input type="text" id="setRtiAOTitleTa" class="form-control">
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI Application Form PDF (Sinhala)</label>
+                                            <input type="text" id="setRtiAppSiUrl" class="form-control">
+                                            <div style="display:flex; gap:10px; margin-top:8px;">
+                                                <input type="file" id="rtiAppSiFileSelect" class="form-control" style="padding:4px;">
+                                                <button type="button" id="rtiAppSiUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('rtiAppSiFileSelect', 'setRtiAppSiUrl', 'rtiAppSiUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>RTI Application Form PDF (English)</label>
+                                            <input type="text" id="setRtiAppEnUrl" class="form-control">
+                                            <div style="display:flex; gap:10px; margin-top:8px;">
+                                                <input type="file" id="rtiAppEnFileSelect" class="form-control" style="padding:4px;">
+                                                <button type="button" id="rtiAppEnUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('rtiAppEnFileSelect', 'setRtiAppEnUrl', 'rtiAppEnUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>RTI Application Form PDF (Tamil)</label>
+                                            <input type="text" id="setRtiAppTaUrl" class="form-control">
+                                            <div style="display:flex; gap:10px; margin-top:8px;">
+                                                <input type="file" id="rtiAppTaFileSelect" class="form-control" style="padding:4px;">
+                                                <button type="button" id="rtiAppTaUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('rtiAppTaFileSelect', 'setRtiAppTaUrl', 'rtiAppTaUploadBtn')"><i class="fas fa-upload"></i> Upload</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 6. Branding Logos & Department Titles -->
+                                <div class="sett-accordion-item">
+                                    <div class="sett-accordion-header" data-sec="sett-sec-branding" onclick="toggleSettingsAccordion(this)">
+                                        <span><i class="fas fa-building-columns"></i> Header Branding & Logos</span>
+                                        <i class="fas fa-chevron-down accordion-arrow"></i>
+                                    </div>
+                                    <div class="sett-accordion-body" id="sett-sec-branding">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>National Emblem Logo Path / URL</label>
+                                            <input type="text" id="setHeaderNatLogo" class="form-control" oninput="showLivePreview(this, 'headerNatLogoPreview')">
+                                            <div class="image-preview-box" style="margin-top:8px;">
+                                                <img id="headerNatLogoPreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                            </div>
+                                            <div style="display:flex; gap:10px; margin-top:8px;">
+                                                <input type="file" id="headerNatLogoFileSelect" class="form-control" style="padding:4px;">
+                                                <button type="button" id="headerNatLogoUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('headerNatLogoFileSelect', 'setHeaderNatLogo', 'headerNatLogoUploadBtn')"><i class="fas fa-upload"></i> Upload Logo</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Provincial Logo Path / URL</label>
+                                            <input type="text" id="setHeaderProvLogo" class="form-control" oninput="showLivePreview(this, 'headerProvLogoPreview')">
+                                            <div class="image-preview-box" style="margin-top:8px;">
+                                                <img id="headerProvLogoPreview" src="" style="max-height:100px; border-radius:6px; display:none; border:1px solid #cbd5e1; padding:2px; background:white;">
+                                            </div>
+                                            <div style="display:flex; gap:10px; margin-top:8px;">
+                                                <input type="file" id="headerProvLogoFileSelect" class="form-control" style="padding:4px;">
+                                                <button type="button" id="headerProvLogoUploadBtn" class="admin-tab-btn" style="padding:6px 12px;" onclick="handleFileUpload('headerProvLogoFileSelect', 'setHeaderProvLogo', 'headerProvLogoUploadBtn')"><i class="fas fa-upload"></i> Upload Logo</button>
+                                            </div>
+                                        </div>
+                                        <hr style="margin:20px 0; border:0; border-top:1px solid #cbd5e1;">
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Department Title (English)</label>
+                                            <input type="text" id="setHeaderTitleEn" class="form-control">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:15px;">
+                                            <label>Department Title (Sinhala)</label>
+                                            <input type="text" id="setHeaderTitleSi" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Department Title (Tamil)</label>
+                                            <input type="text" id="setHeaderTitleTa" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-submit"><i class="fas fa-check-circle"></i> Update Settings</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab content: Hall Bookings -->
+                <div id="admin-tab-bookings" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-calendar-plus"></i> Add / Edit Hall Booking</h3>
+                        <form id="bookingForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="bookingId" value="">
+                            <div class="form-group">
+                                <label>Booking Date</label>
+                                <input type="date" id="bookingDate" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Booked By (Officer / Section)</label>
+                                <input type="text" id="bookingBookedBy" required class="form-control" placeholder="e.g. Provincial Director / Administration Division">
+                            </div>
+                            <div class="form-group">
+                                <label>Purpose / Meeting Title</label>
+                                <input type="text" id="bookingTitle" required class="form-control" placeholder="e.g. Monthly Staff Progress Review Meeting">
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Booking</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search bookings..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'bookingTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Booked By</th>
+                                    <th>Purpose</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingTableBody">
+                                <!-- Dynamically loaded -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab content: Vehicle Bookings -->
+                <div id="admin-tab-bus_bookings" class="admin-tab-content" style="display:none;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:15px; color:var(--portal-blue);"><i class="fas fa-bus"></i> Add / Edit Vehicle Booking</h3>
+                        <form id="busBookingForm" style="display:grid; gap:12px;">
+                            <input type="hidden" id="busBookingId" value="">
+                            <div class="form-group">
+                                <label>Booking Date</label>
+                                <input type="date" id="busBookingDate" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Booked By (Officer / Section / Organization)</label>
+                                <input type="text" id="busBookingBookedBy" required class="form-control" placeholder="e.g. Welfare Division / Provincial Treasury">
+                            </div>
+                            <div class="form-group">
+                                <label>Purpose / Destination</label>
+                                <input type="text" id="busBookingTitle" required class="form-control" placeholder="e.g. Field Visit to Anuradhapura / Staff Training Transport">
+                            </div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Booking</button>
+                        </form>
+                    </div>
+                    <div class="search-filter-wrapper" style="display:flex; justify-content:flex-end; margin-bottom:15px; margin-top: 15px;">
+                        <div style="position:relative; width: 100%; max-width: 300px;">
+                            <input type="text" placeholder="Search vehicle bookings..." class="form-control" style="width:100%; padding-left:35px; border-radius:20px;" onkeyup="filterTable(this, 'busBookingTableBody')">
+                            <i class="fas fa-search" style="position:absolute; left:12px; top:12px; color:#94a3b8;"></i>
+                        </div>
+                    </div>
+                    <div class="premium-table-wrapper">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Booked By</th>
+                                    <th>Purpose / Destination</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="busBookingTableBody">
+                                <!-- Dynamically loaded -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Suggestions Inbox Portal -->
+            <div class="view-section" id="sug-inbox">
+                <h2 class="page-title"><i class="fas fa-inbox" style="color:var(--accent-gold);"></i> <span>Public Suggestions Inbox</span></h2>
+                <div id="suggestionsListContainer">
+                    <p style="color:var(--text-muted); font-style:italic;">Loading inbox records...</p>
+                </div>
+            </div>
+
+            <!-- 3. Officers Static Preview -->
+            <div class="view-section" id="about-officers">
+                <h2 class="page-title"><i class="fas fa-user-tie" style="color:var(--accent-gold);"></i> <span>Welfare Staff Directory Directory</span></h2>
+                <div class="premium-table-wrapper">
+                    <table class="premium-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px; text-align: center;">Photo</th>
+                                <th style="min-width: 160px;">Name</th>
+                                <th style="min-width: 150px;">Designation</th>
+                                <th style="min-width: 120px;">Phone</th>
+                                <th style="min-width: 120px;">Category</th>
+                                <th style="min-width: 180px;">Email</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewOffTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. Circulars List View -->
+            <div class="view-section" id="circulars-list-view">
+                <h2 class="page-title"><i class="fas fa-file-alt" style="color:var(--accent-gold);"></i> <span>Downloads Catalog View</span></h2>
+                <div class="premium-table-wrapper">
+                    <table class="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewDlTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="confirm-modal-overlay">
+        <div class="confirm-modal-box">
+            <div class="confirm-modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="confirm-modal-title" id="confirmTitle">Confirm Action</h3>
+            <p class="confirm-modal-message" id="confirmMessage">Are you sure you want to perform this action?</p>
+            <div class="confirm-modal-actions">
+                <button class="confirm-btn confirm-btn-no" id="confirmBtnNo">Cancel</button>
+                <button class="confirm-btn confirm-btn-yes" id="confirmBtnYes">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Administrative Logic Javascript -->
+    <script src="admin_script.js?v=5"></script>
+
+</body>
+</html>
