@@ -1,12 +1,14 @@
 <?php
 // Database Configuration for Social Services NWP
 mysqli_report(MYSQLI_REPORT_OFF);
-$db_host = 'localhost';
-$db_user = 'root'; 
+
+
+$db_host = 'engdept-db';
+$db_user = 'eng_user'; 
 $db_name = 'social_services_nwp_db';
 
 // Try multiple password options to make it work in different developer environments
-$passwords_to_try = ['Ravi@2025', '', 'root'];
+$passwords_to_try = ['eng_pass_2026', '', 'eng_user'];
 $conn = null;
 $db_connection_error = null;
 
