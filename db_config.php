@@ -2,31 +2,22 @@
 // Database Configuration for Social Services NWP
 mysqli_report(MYSQLI_REPORT_OFF);
 
-
-$db_host = 'engdept-db';
-$db_user = 'eng_user'; 
+// අලුත් MariaDB සර්විස් එකේ විස්තර
+$db_host = 'mariadb'; 
+$db_user = 'root'; // Root එකෙන්ම කනෙක්ට් වෙමු
+$db_pass = 'QlsJaXg3PyqJ7un4'; // ඔයාගේ MYSQL_ROOT_PASSWORD එක
 $db_name = 'social_services_nwp_db';
 
-// Try multiple password options to make it work in different developer environments
-$passwords_to_try = ['eng_pass_2026', '', 'eng_user'];
-$conn = null;
-$db_connection_error = null;
-
-foreach ($passwords_to_try as $test_pass) {
-    $conn = @new mysqli($db_host, $db_user, $test_pass, $db_name);
-    if (!$conn->connect_error) {
-        $db_pass = $test_pass;
-        $db_connection_error = null;
-        break;
-    } else {
-        $db_connection_error = $conn->connect_error;
-    }
-}
+// කෙලින්ම ඩේටාබේස් එකට කනෙක්ට් වීම
+$conn = @new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 if ($conn && !$conn->connect_error) {
     if (!$conn->set_charset("utf8mb4")) {
         $conn->set_charset("utf8");
     }
+    $db_connection_error = null;
+} else {
+    $db_connection_error = $conn->connect_error;
 }
 
 // Log connection attempt from Apache/Web or CLI
