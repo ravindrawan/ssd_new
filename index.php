@@ -254,7 +254,7 @@
                         <i class="fas fa-cubes"></i>
                     </h3>
                     <div class="systems-grid">
-                        <a href="../ssd elders/" target="_blank" class="system-btn">
+                        <a href="https://elders-route-north-western-province-council-production-2.apps.red-k8s.akaza.lk" target="_blank" class="system-btn">
                             <div class="system-btn-icon"><i class="fas fa-home-user"></i></div>
                             <div class="system-btn-text">
                                 <span class="sys-title" data-i18n="sys_elder_homes">Elder Homes System</span>
@@ -262,7 +262,7 @@
                             </div>
                             <div class="system-btn-arrow"><i class="fas fa-chevron-right"></i></div>
                         </a>
-                        <a href="../monthly progress/" target="_blank" class="system-btn">
+                        <a href="https://ssd-progress-git-north-western-province-council-production-3.apps.red-k8s.akaza.lk" target="_blank" class="system-btn">
                             <div class="system-btn-icon"><i class="fas fa-chart-line"></i></div>
                             <div class="system-btn-text">
                                 <span class="sys-title" data-i18n="sys_monthly_progress">Monthly Progress View</span>
@@ -278,7 +278,7 @@
                             </div>
                             <div class="system-btn-arrow"><i class="fas fa-chevron-right"></i></div>
                         </a>
-                        <a href="../ssdstore/" target="_blank" class="system-btn">
+                        <a href="https://ssd-stores-git-north-western-province-council-production-3.apps.red-k8s.akaza.lk" target="_blank" class="system-btn">
                             <div class="system-btn-icon"><i class="fas fa-warehouse"></i></div>
                             <div class="system-btn-text">
                                 <span class="sys-title" data-i18n="sys_ssd_store">SSD Store</span>
