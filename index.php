@@ -270,7 +270,7 @@
                             </div>
                             <div class="system-btn-arrow"><i class="fas fa-chevron-right"></i></div>
                         </a>
-                        <a href="../recroom/" target="_blank" class="system-btn">
+                        <a href="https://ssd-recroom-git-north-western-province-council-production-3.apps.red-k8s.akaza.lk" target="_blank" class="system-btn">
                             <div class="system-btn-icon"><i class="fas fa-archive"></i></div>
                             <div class="system-btn-text">
                                 <span class="sys-title" data-i18n="sys_ssd_rec">SSD Rec</span>
@@ -286,7 +286,7 @@
                             </div>
                             <div class="system-btn-arrow"><i class="fas fa-chevron-right"></i></div>
                         </a>
-                        <a href="../equipment/" target="_blank" class="system-btn">
+                        <a href="https://ssd-equip-git-north-western-province-council-production-3.apps.red-k8s.akaza.lk" target="_blank" class="system-btn">
                             <div class="system-btn-icon"><i class="fas fa-tools"></i></div>
                             <div class="system-btn-text">
                                 <span class="sys-title" data-i18n="sys_ssd_equipment">SSD Equipment</span>
