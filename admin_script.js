@@ -124,7 +124,7 @@ fetch('auth.php?action=check&v=' + Date.now())
         showToast("Session expired or unauthorized access. Redirecting to home page...", "error");
         setTimeout(() => {
             sessionStorage.removeItem('loggedInUser');
-            window.location.href = 'index.html';
+            window.location.href = 'index.php';
         }, 2000);
     }
 })
@@ -134,7 +134,7 @@ fetch('auth.php?action=check&v=' + Date.now())
     if (!loggedUser) {
         showToast("Unauthorized access. Redirecting to home page...", "error");
         setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'index.php';
         }, 2000);
     } else {
         const user = JSON.parse(loggedUser);
@@ -149,7 +149,7 @@ window.handleLogout = function(e) {
     fetch('auth.php?action=logout')
     .finally(() => {
         sessionStorage.removeItem('loggedInUser');
-        window.location.href = 'index.html';
+        window.location.href = 'index.php';
     });
 };
 
