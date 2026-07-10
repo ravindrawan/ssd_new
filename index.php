@@ -66,7 +66,7 @@
                 <i class="fas fa-bars"></i> Menu
             </div>
             <ul class="nav-menu">
-                <li><a href="index.html" data-i18n="nav_home">Home</a></li>
+                <li><a href="index.php" data-i18n="nav_home">Home</a></li>
                 <li class="dropdown">
                     <a href="#"><span data-i18n="nav_about">About Us</span> <i class="fas fa-caret-down"></i></a>
                     <ul class="dropdown-content">
