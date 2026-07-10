@@ -769,7 +769,7 @@ if ($row['count'] == 0) {
 
 echo "<hr><h3>Database Initialization Complete!</h3>";
 echo "<p>Database <b>social_services_nwp_db</b> has been set up with all schemas and seeds.</p>";
-echo "<p><a href='index.html'>Go to Homepage</a></p>";
+echo "<p><a href='index.php'>Go to Homepage</a></p>";
 
 $conn->close();
 ?>
