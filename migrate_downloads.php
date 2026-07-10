@@ -118,7 +118,7 @@ if ($res) {
 }
 
 $conn->close();
-echo '<a href="index.html" class="btn">Go to Home</a>
+echo '<a href="index.php" class="btn">Go to Home</a>
 </div>
 </body>
 </html>';
