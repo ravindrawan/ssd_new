@@ -45,7 +45,7 @@
 
     <!-- Main Branding Header -->
     <header class="branding-header">
-        <div class="container branding-container" onclick="window.location.href='index.html'" style="cursor:pointer;">
+        <div class="container branding-container" onclick="window.location.href='index.php'" style="cursor:pointer;">
             <div class="all-logos">
                 <img id="nationalLogo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Emblem_of_Sri_Lanka.svg/200px-Emblem_of_Sri_Lanka.svg.png" alt="National Logo" class="emblem" onerror="this.src='logo2.jpg'">
                 <img id="provincialLogo" src="Nwp_sri_lanka.png" alt="Provincial Logo" class="emblem" onerror="this.src='logo2.jpg'">
